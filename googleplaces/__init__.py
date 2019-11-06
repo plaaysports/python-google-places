@@ -843,18 +843,13 @@ class Place(object):
     Represents a place from the results of a Google Places API query.
     """
     def __init__(self, query_instance, place_data):
-        print(place_data)
-        print(type(place_data))
         for carac in place_data.keys():
             carac_str = carac.strip().replace(' ', '_')
             exec(f'self._{carac_str} = "{place_data[carac]}"')
         self._query_instance = query_instance
         if 'geometry' in place_data:
             self._geo_location = place_data['geometry']['location']
-        if place_data.get('address_components') is None:
-            self._details = None
-        else:
-            self._details = place_data
+        self._details = place_data
 
     @property
     def reference(self):
@@ -1084,4 +1079,3 @@ class Photo(object):
                                   sensor=sensor)
 
         self.mimetype, self.filename, self.data, self.url = result
-        
