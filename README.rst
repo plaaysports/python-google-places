@@ -3,6 +3,8 @@ python-google-places
 
 .. _introduction:
 
+Fork of python-google-places, added the option to query specific fields
+
 **python-google-places** provides a simple wrapper around the experimental
 Google Places API.
 
@@ -12,7 +14,7 @@ Installation
 
 .. _installation:
 
-pip install https://github.com/slimkrazy/python-google-places/zipball/master
+pip install git+ssh://git@github.com/dashmote/python-google-places.git
 
 OR
 
