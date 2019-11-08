@@ -70,6 +70,7 @@ def _fetch_remote(service_url, params=None, use_http_post=False):
         request = urllib.request.Request(service_url, data=encoded_data)
     return (request_url, urllib.request.urlopen(request))
 
+
 def _fetch_remote_json(service_url, params=None, use_http_post=False):
     """Retrieves a JSON object from a URL."""
     if not params:
@@ -81,6 +82,7 @@ def _fetch_remote_json(service_url, params=None, use_http_post=False):
         return (request_url, json.loads(str_response, parse_float=Decimal))
     return (request_url, json.load(response, parse_float=Decimal))
 
+
 def _fetch_remote_file(service_url, params=None, use_http_post=False):
     """Retrieves a file from a URL.
 
@@ -91,11 +93,12 @@ def _fetch_remote_file(service_url, params=None, use_http_post=False):
 
     request_url, response = _fetch_remote(service_url, params, use_http_post)
     dummy, params = cgi.parse_header(
-            response.headers.get('Content-Disposition', ''))
+        response.headers.get('Content-Disposition', ''))
     fn = params['filename']
 
     return (response.headers.get('content-type'),
             fn, response.read(), response.geturl())
+
 
 def geocode_location(location, sensor=False, api_key=None):
     """Converts a human-readable location to lat-lng.
@@ -106,7 +109,7 @@ def geocode_location(location, sensor=False, api_key=None):
     location -- A human-readable location, e.g 'London, England'
     sensor   -- Boolean flag denoting if the location came from a device using
                 its' location sensor (default False)
-    api_key  -- A valid Google Places API key. 
+    api_key  -- A valid Google Places API key.
 
     raises:
     GooglePlacesError -- if the geocoder fails to find a location.
@@ -115,7 +118,7 @@ def geocode_location(location, sensor=False, api_key=None):
     if api_key is not None:
         params['key'] = api_key
     url, geo_response = _fetch_remote_json(
-            GooglePlaces.GEOCODE_API_URL, params)
+        GooglePlaces.GEOCODE_API_URL, params)
     _validate_response(url, geo_response)
     if geo_response['status'] == GooglePlaces.RESPONSE_STATUS_ZERO_RESULTS:
         error_detail = ('Lat/Lng for location \'%s\' can\'t be determined.' %
@@ -123,23 +126,27 @@ def geocode_location(location, sensor=False, api_key=None):
         raise GooglePlacesError(error_detail)
     return geo_response['results'][0]['geometry']['location']
 
+
 def _get_place_details(place_id, api_key, sensor=False,
-                       language=lang.ENGLISH):
+                       language=lang.ENGLISH, fields=[]):
     """Gets a detailed place response.
 
     keyword arguments:
     place_id -- The unique identifier for the required place.
     """
+    fields = ''.join([x+',' for x in fields])[:-1]
     url, detail_response = _fetch_remote_json(GooglePlaces.DETAIL_API_URL,
                                               {'placeid': place_id,
                                                'sensor': str(sensor).lower(),
                                                'key': api_key,
-                                               'language': language})
+                                               'language': language,
+                                               'fields': fields})
     _validate_response(url, detail_response)
     return detail_response['result']
 
+
 def _get_place_photo(photoreference, api_key, maxheight=None, maxwidth=None,
-                       sensor=False):
+                     sensor=False):
     """Gets a place's photo by reference.
     See detailed documentation at https://developers.google.com/places/documentation/photos
 
@@ -165,6 +172,7 @@ def _get_place_photo(photoreference, api_key, maxheight=None, maxwidth=None,
         params['maxwidth'] = maxwidth
 
     return _fetch_remote_file(GooglePlaces.PHOTO_API_URL, params)
+
 
 def _validate_response(url, response):
     """Validates that the response from Google was successful."""
@@ -230,8 +238,8 @@ class GooglePlaces(object):
         return self.nearby_search(**kwargs)
 
     def nearby_search(self, language=lang.ENGLISH, keyword=None, location=None,
-               lat_lng=None, name=None, radius=3200, rankby=ranking.PROMINENCE,
-               sensor=False, type=None, types=[], pagetoken=None):
+                      lat_lng=None, name=None, radius=3200, rankby=ranking.PROMINENCE,
+                      sensor=False, type=None, types=[], pagetoken=None):
         """Perform a nearby search using the Google Places API.
 
         One of either location, lat_lng or pagetoken are required, the rest of 
@@ -267,7 +275,8 @@ class GooglePlaces(object):
                     (default None)
         """
         if location is None and lat_lng is None and pagetoken is None:
-            raise ValueError('One of location, lat_lng or pagetoken must be passed in.')
+            raise ValueError(
+                'One of location, lat_lng or pagetoken must be passed in.')
         if rankby == 'distance':
             # As per API docs rankby == distance:
             #  One or more of keyword, name, or types is required.
@@ -301,7 +310,7 @@ class GooglePlaces(object):
             self._request_params['language'] = language
         self._add_required_param_keys()
         url, places_response = _fetch_remote_json(
-                GooglePlaces.NEARBY_SEARCH_API_URL, self._request_params)
+            GooglePlaces.NEARBY_SEARCH_API_URL, self._request_params)
         _validate_response(url, places_response)
         return GooglePlacesSearchResult(self, places_response)
 
@@ -349,7 +358,7 @@ class GooglePlaces(object):
             self._request_params['pagetoken'] = pagetoken
         self._add_required_param_keys()
         url, places_response = _fetch_remote_json(
-                GooglePlaces.TEXT_SEARCH_API_URL, self._request_params)
+            GooglePlaces.TEXT_SEARCH_API_URL, self._request_params)
         _validate_response(url, places_response)
         return GooglePlacesSearchResult(self, places_response)
 
@@ -391,12 +400,12 @@ class GooglePlaces(object):
             self._request_params['types'] = types
         if len(components) > 0:
             self._request_params['components'] = '|'.join(['{}:{}'.format(
-                                                     c[0],c[1]) for c in components])
+                c[0], c[1]) for c in components])
         if language is not None:
             self._request_params['language'] = language
         self._add_required_param_keys()
         url, places_response = _fetch_remote_json(
-                GooglePlaces.AUTOCOMPLETE_API_URL, self._request_params)
+            GooglePlaces.AUTOCOMPLETE_API_URL, self._request_params)
         _validate_response(url, places_response)
         return GoogleAutocompleteSearchResult(self, places_response)
 
@@ -445,7 +454,7 @@ class GooglePlaces(object):
         self._request_params = {'radius': radius}
         self._sensor = sensor
         self._request_params['location'] = self._generate_lat_lng_string(
-                lat_lng, location)
+            lat_lng, location)
         if keyword is not None:
             self._request_params['keyword'] = keyword
         if name is not None:
@@ -463,7 +472,7 @@ class GooglePlaces(object):
             self._request_params['opennow'] = 'true'
         self._add_required_param_keys()
         url, places_response = _fetch_remote_json(
-                GooglePlaces.RADAR_SEARCH_API_URL, self._request_params)
+            GooglePlaces.RADAR_SEARCH_API_URL, self._request_params)
         _validate_response(url, places_response)
         return GooglePlacesSearchResult(self, places_response)
 
@@ -477,11 +486,16 @@ class GooglePlaces(object):
         """
         data = {'placeid': place_id}
         url, checkin_response = _fetch_remote_json(
-                GooglePlaces.CHECKIN_API_URL % (str(sensor).lower(),
-                        self.api_key), json.dumps(data), use_http_post=True)
+            GooglePlaces.CHECKIN_API_URL % (str(sensor).lower(),
+                                            self.api_key), json.dumps(data), 
+                                            use_http_post=True)
         _validate_response(url, checkin_response)
 
-    def get_place(self, place_id, sensor=False, language=lang.ENGLISH):
+    def get_place(self, place_id, sensor=False,
+                  fields=['formatted_address', 'geometry', 'name',
+                          'permanently_closed', 'place_id', 'type',
+                          'formatted_phone_number'],
+                  language=lang.ENGLISH):
         """Gets a detailed place object.
 
         keyword arguments:
@@ -492,7 +506,7 @@ class GooglePlaces(object):
                     results should be returned, if possible. (default lang.ENGLISH)
         """
         place_details = _get_place_details(place_id,
-                self.api_key, sensor, language=language)
+                                           self.api_key, sensor, language=language, fields=fields)
         return Place(self, place_details)
 
     def add_place(self, **kwargs):
@@ -544,12 +558,12 @@ class GooglePlaces(object):
             raise ValueError('Invalid keys for lat_lng.')
 
         request_params['language'] = (kwargs.get('language')
-                if kwargs.get('language') is not None else
-                lang.ENGLISH)
+                                      if kwargs.get('language') is not None else
+                                      lang.ENGLISH)
 
         sensor = (kwargs.get('sensor')
-                       if kwargs.get('sensor') is not None else
-                       False)
+                  if kwargs.get('sensor') is not None else
+                  False)
 
         # At some point Google might support multiple types, so this supports
         # strings and lists.
@@ -558,8 +572,8 @@ class GooglePlaces(object):
         else:
             request_params['types'] = kwargs['types']
         url, add_response = _fetch_remote_json(
-                GooglePlaces.ADD_API_URL % (str(sensor).lower(),
-                self.api_key), json.dumps(request_params), use_http_post=True)
+            GooglePlaces.ADD_API_URL % (str(sensor).lower(),
+                                        self.api_key), json.dumps(request_params), use_http_post=True)
         _validate_response(url, add_response)
         return {'place_id': add_response['place_id'],
                 'id': add_response['id']}
@@ -576,8 +590,8 @@ class GooglePlaces(object):
 
         request_params = {'place_id': place_id}
         url, delete_response = _fetch_remote_json(
-                GooglePlaces.DELETE_API_URL % (str(sensor).lower(),
-                self.api_key), json.dumps(request_params), use_http_post=True)
+            GooglePlaces.DELETE_API_URL % (str(sensor).lower(),
+                                           self.api_key), json.dumps(request_params), use_http_post=True)
         _validate_response(url, delete_response)
 
     def _add_required_param_keys(self):
@@ -587,7 +601,7 @@ class GooglePlaces(object):
     def _generate_lat_lng_string(self, lat_lng, location):
         try:
             return '%(lat)s,%(lng)s' % (lat_lng if lat_lng is not None
-                    else geocode_location(location=location, api_key=self.api_key))
+                                        else geocode_location(location=location, api_key=self.api_key))
         except GooglePlacesError as e:
             raise ValueError(
                 'lat_lng must be a dict with the keys, \'lat\' and \'lng\'. Cause: %s' % str(e))
@@ -635,6 +649,7 @@ class Prediction(object):
     """
     Represents a prediction from the results of a Google Places Autocomplete API query.
     """
+
     def __init__(self, query_instance, prediction):
         self._query_instance = query_instance
         self._description = prediction['description']
@@ -643,7 +658,7 @@ class Prediction(object):
         self._place_id = prediction['place_id']
         self._reference = prediction['reference']
         self._terms = prediction['terms']
-        self._types = prediction.get('types',[])
+        self._types = prediction.get('types', [])
         if prediction.get('_description') is None:
             self._place = None
         else:
@@ -751,8 +766,8 @@ class Prediction(object):
                 except KeyError:
                     language = lang.ENGLISH
             place = _get_place_details(
-                    self.place_id, self._query_instance.api_key,
-                    self._query_instance.sensor, language=language)
+                self.place_id, self._query_instance.api_key,
+                self._query_instance.sensor, language=language)
             self._place = Place(self._query_instance, place)
 
     def _validate_status(self):
@@ -761,7 +776,7 @@ class Prediction(object):
         """
         if self._place is None:
             error_detail = ('The attribute requested is only available after ' +
-                    'an explicit call to get_details() is made.')
+                            'an explicit call to get_details() is made.')
             raise GooglePlacesAttributeError(error_detail)
 
     def __repr__(self):
@@ -828,20 +843,13 @@ class Place(object):
     Represents a place from the results of a Google Places API query.
     """
     def __init__(self, query_instance, place_data):
+        for carac in place_data.keys():
+            carac_str = carac.strip().replace(' ', '_')
+            exec(f'self._{carac_str} = "{place_data[carac]}"')
         self._query_instance = query_instance
-        self._place_id = place_data['place_id']
-        self._id = place_data.get('id', '')
-        self._reference = place_data.get('reference', '')
-        self._name = place_data.get('name','')
-        self._vicinity = place_data.get('vicinity', '')
-        self._geo_location = place_data['geometry']['location']
-        self._rating = place_data.get('rating','')
-        self._types = place_data.get('types','')
-        self._icon = place_data.get('icon','')
-        if place_data.get('address_components') is None:
-            self._details = None
-        else:
-            self._details = place_data
+        if 'geometry' in place_data:
+            self._geo_location = place_data['geometry']['location']
+        self._details = place_data
 
     @property
     def reference(self):
@@ -1027,8 +1035,8 @@ class Place(object):
                 except KeyError:
                     language = lang.ENGLISH
             self._details = _get_place_details(
-                    self.place_id, self._query_instance.api_key,
-                    self._query_instance.sensor, language=language)
+                self.place_id, self._query_instance.api_key,
+                self._query_instance.sensor, language=language)
 
     @cached_property
     def photos(self):
@@ -1039,7 +1047,7 @@ class Place(object):
     def _validate_status(self):
         if self._details is None:
             error_detail = ('The attribute requested is only available after ' +
-                    'an explicit call to get_details() is made.')
+                            'an explicit call to get_details() is made.')
             raise GooglePlacesAttributeError(error_detail)
 
     def __repr__(self):
