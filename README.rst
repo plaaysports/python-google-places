@@ -16,10 +16,6 @@ Installation
 
 pip install git+ssh://git@github.com/dashmote/python-google-places.git
 
-OR
-
-pip install python-google-places
-
 Download source and then:
 python setup.py install
 
