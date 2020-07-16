@@ -847,7 +847,7 @@ class Place(object):
     def __init__(self, query_instance, place_data):
         for carac in place_data.keys():
             carac_str = carac.strip().replace(' ', '_')
-            exec(f'self._{carac_str} = "{place_data[carac]}"')
+            exec(f'self._{carac_str} = """{place_data[carac]}"""')
         self._query_instance = query_instance
         if 'geometry' in place_data:
             self._geo_location = place_data['geometry']['location']
