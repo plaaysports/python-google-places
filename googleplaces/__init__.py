@@ -494,7 +494,9 @@ class GooglePlaces(object):
     def get_place(self, place_id, sensor=False,
                   fields=['formatted_address', 'geometry', 'name',
                           'permanently_closed', 'place_id', 'type',
-                          'formatted_phone_number'],
+                          'formatted_phone_number',
+                          # Backwared compatibility fix
+                          'address_components', 'id'],
                   language=lang.ENGLISH):
         """Gets a detailed place object.
 
